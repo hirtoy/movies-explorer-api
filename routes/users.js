@@ -4,23 +4,11 @@ const { celebrate, Joi } = require('celebrate');
 const userRoutes = express.Router();
 
 const {
-  // getUserById,
   updateUserProfile,
   getUserInfo,
-} = require('../controllers/users');
-
+} = require('../controllers/Users');
 
 userRoutes.get('/me', getUserInfo);
-
-// userRoutes.get(
-//   '/:id',
-//   celebrate({
-//     params: Joi.object().keys({
-//       id: Joi.string().required().length(24).hex(),
-//     }),
-//   }),
-//   getUserById,
-// );
 
 userRoutes.patch(
   '/me',

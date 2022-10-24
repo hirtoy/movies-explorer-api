@@ -6,18 +6,18 @@ const BadRequestError = require('../errors/bad-request-error');
 const ForbiddenError = require('../errors/forbidden-error');
 const NotFoundError = require('../errors/not-found-error');
 
-//отображение всех фильмов
-const getMovies = async (req, res, next) => {
+// отображение всех фильмов
+module.exports.getMovies = (req, res, next) => {
   try {
-    const movies = await Movie.find({});
+    const movies = Movie.find({});
     res.send(movies);
   } catch (err) {
     next(err);
   }
 };
 
-//создание фильма
-const createMovie = async (req, res, next) => {
+// создание фильма
+module.exports.createMovie = (req, res, next) => {
   const {
     country,
     director,
@@ -29,10 +29,11 @@ const createMovie = async (req, res, next) => {
     trumbnail,
     movield,
     nameRU,
-    nameEN } = req.body
+    nameEN,
+  } = req.body;
 
   try {
-    const movie = await Movie.create({
+    const movie = Movie.create({
       country,
       director,
       duration,
@@ -43,7 +44,8 @@ const createMovie = async (req, res, next) => {
       trumbnail,
       movield,
       nameRU,
-      nameEN, owner: req.user._id
+      nameEN,
+      owner: req.user._id,
     });
     res.status(STATUS_OK).send(movie);
   } catch (err) {
@@ -55,11 +57,10 @@ const createMovie = async (req, res, next) => {
   }
 };
 
-
-//удаление фильма
-const deleteMovie = async (req, res, next) => {
+// удаление фильма
+module.exports.deleteMovie = (req, res, next) => {
   try {
-    const movie = await Movie.findById({ _id: req.params.movieId });
+    const movie = Movie.findById({ _id: req.params.movieId });
     if (!movie) {
       next(new NotFoundError('Фильм с указанным id не найден'));
       return;
@@ -68,7 +69,7 @@ const deleteMovie = async (req, res, next) => {
       next(new ForbiddenError('Можно удалять только свои фильмы'));
       return;
     }
-    const delMovie = await Movie.findByIdAndRemove({ _id: req.params.movieId });
+    const delMovie = Movie.findByIdAndRemove({ _id: req.params.movieId });
     res.send({ message: 'Фильм успешно удален', delMovie });
   } catch (err) {
     if (err.name === 'CastError') {
@@ -77,10 +78,4 @@ const deleteMovie = async (req, res, next) => {
     }
     next(err);
   }
-};
-
-module.exports = {
-  getMovies,
-  createMovie,
-  deleteMovie
 };
