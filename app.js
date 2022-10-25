@@ -8,7 +8,7 @@ const cors = require('./middlewares/cors');
 const { requestLogger, errorLogger } = require('./middlewares/Logger');
 const NotFoundError = require('./errors/not-found-error');
 const { createUser, login, signOut } = require('./controllers/Users');
-const { routes } = require('./routes/router');
+const { routes } = require('./routes');
 const auth = require('./middlewares/Auth');
 
 const { PORT = 3000 } = process.env;
