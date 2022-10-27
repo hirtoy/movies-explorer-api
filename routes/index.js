@@ -1,14 +1,17 @@
 const express = require('express');
 
-const routes = express.Router();
-const { userRoutes } = require('./users');
-const { movieRoutes } = require('./movies');
+const auth = require('../middlewares/Auth');
+
+const router = express.Router();
 
 const NotFoundError = require('../errors/not-found-error');
 
-routes.use('/users', userRoutes);
-routes.use('/movies', movieRoutes);
+router.use(require('./celebrate'));
+router.use(require('./users'));
+router.use(require('./movies'));
 
-routes.use('*', NotFoundError);
+router.use(auth);
 
-module.exports = { routes };
+router.use('*', NotFoundError);
+
+module.exports = router;

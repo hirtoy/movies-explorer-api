@@ -29,28 +29,22 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-userSchema.methods.toJSON = function hideCredentials() {
-  const user = this.toObject();
-  delete user.password;
-  return user;
-};
+userSchema.statics.findUserByCredentials = function findUserByCredentials({ email, password }) {
+  return this.findOne({ email }).select('+password')
+    .then((user) => {
+      if (!user) {
+        throw new UnauthorizedError('Пользователь не найден');
+      }
 
-userSchema.statics.findUserByCredentials = function findUserByCredentials(
-  email,
-  password,
-  next,
-) {
-  const user = this.findOne({ email }).select('+password');
-  if (!user) {
-    return next(new UnauthorizedError('Неправильные почта или пароль'));
-  }
+      return bcrypt.compare(password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            throw new UnauthorizedError();
+          }
 
-  const isMatch = bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    return next(new UnauthorizedError('Неправильные почта или пароль'));
-  }
-
-  return user;
+          return user;
+        });
+    });
 };
 
 module.exports = mongoose.model('user', userSchema);

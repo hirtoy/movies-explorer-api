@@ -1,36 +1,43 @@
 const express = require('express');
 const { celebrate, Joi } = require('celebrate');
 
-const movieRoutes = express.Router();
+const router = express.Router();
 const {
   createMovie,
   deleteMovie,
   getMovies,
 } = require('../controllers/Movies');
 
-movieRoutes.get('/', getMovies);
+router.get('/movies', getMovies);
 
-movieRoutes.post(
-  '/',
+router.post(
+  '/movies',
   celebrate({
     body: Joi.object().keys({
-      name: Joi.string().required().min(2).max(30),
-      link: Joi.string()
-        .required()
-        .regex(/^https?:\/\/(www.){0,1}([0-9a-zA-Z_-]+\.){1,3}[a-zA-Z]+[A-Za-z0-9-._~:/?#[\]@!$&'()*+,;=]+#?$/m),
+      nameRU: Joi.string().required(),
+      nameEN: Joi.string().required(),
+      description: Joi.string().required(),
+      year: Joi.string().required(),
+      duration: Joi.number().integer().required(),
+      director: Joi.string().required(),
+      country: Joi.string().required(),
+      movieId: Joi.number().integer().required(),
+      thumbnail: Joi.string().required().regex(/^https?:\/\/(www.){0,1}([0-9a-zA-Z_-]+\.){1,3}[a-zA-Z]+[A-Za-z0-9-._~:/?#[\]@!$&'()*+,;=]+#?$/m),
+      trailerLink: Joi.string().required(),
+      image: Joi.string().required().regex(/^https?:\/\/(www.){0,1}([0-9a-zA-Z_-]+\.){1,3}[a-zA-Z]+[A-Za-z0-9-._~:/?#[\]@!$&'()*+,;=]+#?$/m),
     }),
   }),
   createMovie,
 );
 
-movieRoutes.delete(
-  '/:movieId',
+router.delete(
+  '/movies/:movieId',
   celebrate({
     params: Joi.object().keys({
-      cardId: Joi.string().required().length(24).hex(),
+      movieId: Joi.string().required().hex(),
     }),
   }),
   deleteMovie,
 );
 
-module.exports = { movieRoutes };
+module.exports = router;

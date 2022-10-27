@@ -12,35 +12,39 @@ const { STATUS_OK } = require('../utils/constants');
 
 module.exports.createUser = (req, res, next) => {
   const {
-    name, about, avatar, email, password,
+    name, email, password,
   } = req.body;
-  try {
-    const hashedPassword = bcrypt.hash(password, 10);
-    const user = User.create({
-      name, about, avatar, email, password: hashedPassword,
+
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      name, email, password: hash,
+    }))
+    .then((user) => res.status(STATUS_OK).send({
+      user: {
+        name: user.name,
+        email: user.email,
+      },
+    }))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError());
+        return;
+      }
+      if (err.name === 'MongoServerError' && err.code === 11000) {
+        next(new ConflictError());
+        return;
+      }
+
+      next(err);
     });
-    res.status(STATUS_OK).send({
-      data: user.toJSON(),
-    });
-  } catch (err) {
-    if (err.name === 'ValidationError') {
-      next(new BadRequestError('Переданы некорректные данные'));
-      return;
-    }
-    if (err.code === 11000) {
-      next(new ConflictError('Пользователь с таким email уже существует'));
-      return;
-    }
-    next(err);
-  }
 };
 
 module.exports.updateUserProfile = (req, res, next) => {
-  const { name, about } = req.body;
+  const { name, email } = req.body;
   try {
     const user = User.findByIdAndUpdate(
       req.user._id,
-      { name, about },
+      { name, email },
       { new: true, runValidators: true },
     );
     if (!user) {
@@ -53,7 +57,7 @@ module.exports.updateUserProfile = (req, res, next) => {
       next(new BadRequestError('Переданы некорректные данные'));
       return;
     }
-    if (err.kind === 'ObjectId') {
+    if (err.name === 'ObjectId') {
       next(new BadRequestError('Невалидный id пользователя'));
       return;
     }
@@ -85,36 +89,19 @@ module.exports.signOut = (req, res) => {
 };
 
 module.exports.getUserInfo = (req, res, next) => {
-  try {
-    const user = User.findById({ _id: req.user._id });
-    if (!user) {
-      next(new NotFoundError('Пользователь по указанному id не найден'));
-      return;
-    }
-    res.send({ data: user });
-  } catch (err) {
-    if (err.name === 'CastError') {
-      next(new BadRequestError('Переданы некорректные данные'));
-      return;
-    }
-    next(err);
-  }
-};
+  const userId = req.user._id;
 
-module.exports.getUserById = (req, res, next) => {
-  const { id } = req.params;
-  try {
-    const user = User.findById(id);
-    if (!user) {
-      next(new NotFoundError('Пользователь по указанному id не найден'));
-      return;
-    }
-    res.send(user);
-  } catch (err) {
-    if (err.kind === 'ObjectId') {
-      next(new BadRequestError('Невалидный id пользователя'));
-      return;
-    }
-    next(err);
-  }
+  User.findById(userId)
+    .orFail(() => {
+      throw new NotFoundError();
+    })
+    .then((user) => res.status(STATUS_OK).send(user))
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError('Пользователь по указанному id не найден'));
+        return;
+      }
+
+      next(err);
+    });
 };

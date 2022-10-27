@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 const { FORBIDDEN_CODE } = require('../utils/constants');
 
 class ForbiddenError extends Error {

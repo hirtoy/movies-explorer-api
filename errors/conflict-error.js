@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 const { CONFLICT_CODE } = require('../utils/constants');
 
 class ConflictError extends Error {
