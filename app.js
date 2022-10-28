@@ -8,10 +8,10 @@ const cors = require('./middlewares/cors');
 const { requestLogger, errorLogger } = require('./middlewares/Logger');
 const NotFoundError = require('./errors/not-found-error');
 // const router = require('./routes/index');
-const auth = require('./middlewares/Auth');
 
 const { PORT = 3000 } = process.env;
 const app = express();
+app.use(express.json());
 
 app.use(cors);
 
@@ -33,7 +33,7 @@ function main() {
 main();
 
 app.use(bodyParser.json());
-app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(requestLogger);
@@ -43,8 +43,6 @@ app.get('/crash-test', () => {
     throw new Error('Сервер сейчас упадёт');
   }, 0);
 });
-
-app.use(auth);
 
 app.use(require('./routes/index'));
 
@@ -61,6 +59,5 @@ app.use((err, req, res, next) => {
   res.status(statusCode).send({
     message: statusCode === 500 ? 'На сервере произошла ошибка' : message,
   });
-
   next();
 });

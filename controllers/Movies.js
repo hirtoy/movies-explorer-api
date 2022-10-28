@@ -67,11 +67,5 @@ module.exports.deleteMovie = (req, res, next) => {
         .then(() => res.status(STATUS_OK).send({ message: 'Фильм успешно удален' }))
         .catch((err) => next(err));
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new BadRequestError('Переданы некорректные данные'));
-        return;
-      }
-      next(err);
-    });
+    .catch(next);
 };
