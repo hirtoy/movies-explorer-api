@@ -6,7 +6,7 @@ const router = express.Router();
 const {
   updateUserProfile,
   getUserInfo,
-} = require('../controllers/Users');
+} = require('../controllers/users');
 
 router.get('/users/me', getUserInfo);
 

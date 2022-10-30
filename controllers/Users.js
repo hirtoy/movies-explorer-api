@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const BadRequestError = require('../errors/bad-request-error');
 const NotFoundError = require('../errors/not-found-error');
 const ConflictError = require('../errors/conflict-error');
+const UnauthorizedError = require('../errors/unauthorized-error');
 
 const User = require('../models/user');
 
@@ -20,15 +21,16 @@ module.exports.createUser = (req, res, next) => {
       user: {
         name: user.name,
         email: user.email,
+        id: user._id,
       },
     }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError());
+        next(new BadRequestError('При регистрации пользователя произошла ошибка'));
         return;
       }
       if (err.name === 'MongoServerError' && err.code === 11000) {
-        next(new ConflictError());
+        next(new ConflictError('Пользователь с таким email уже существует'));
         return;
       }
 
@@ -37,34 +39,49 @@ module.exports.createUser = (req, res, next) => {
 };
 
 module.exports.updateUserProfile = (req, res, next) => {
-  // const userInfo = req.user._id;
   const { name, email } = req.body;
+
   User.findByIdAndUpdate(
     req.user._id,
     { name, email },
     { new: true, runValidators: true },
   )
-    .orFail(() => next(new NotFoundError('Пользователь с указанным id не найден')))
-    .then((user) => res.send(user))
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Некорректный id пользователя');
+      }
+      return res.send({ data: user });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Введены некорректные данные'));
-      } else if (err.code === 11000) {
-        next(new ConflictError('Пользователь с данным email уже существует'));
-      } else {
-        next(err);
+        return;
       }
+      if (err.code === 11000) {
+        next(new UnauthorizedError('Пользователь с таким email уже существует'));
+        return;
+      }
+      next(err);
     });
 };
 
-module.exports.login = async (req, res, next) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
-  User.findUserByCredentials({ email, password })
+
+  return User.findUserByCredentials({ email, password })
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret-key', { expiresIn: '7d' });
+      const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', { expiresIn: '7d' });
+      // const userData = {
+      //   name: user.name,
+      //   email: user.email,
+      //   _id: user._id,
+      //   token,
+      // };
       res.send({ token });
     })
-    .catch(next);
+    .catch(() => {
+      next(new UnauthorizedError('Неверный логин или пароль'));
+    });
 };
 
 module.exports.signOut = (req, res) => {
@@ -72,11 +89,15 @@ module.exports.signOut = (req, res) => {
   }).send();
 };
 
-module.exports.getUserInfo = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user._id);
-    res.send(user);
-  } catch (err) {
-    next(new ConflictError('Пользователь с данным email уже существует'));
-  }
+module.exports.getUserInfo = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Такого пользователя нет');
+      }
+      return res.send(user);
+    })
+    .catch((err) => {
+      next(err);
+    });
 };

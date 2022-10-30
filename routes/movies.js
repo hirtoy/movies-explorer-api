@@ -6,7 +6,7 @@ const {
   createMovie,
   deleteMovie,
   getMovies,
-} = require('../controllers/Movies');
+} = require('../controllers/movies');
 
 router.get('/movies', getMovies);
 
@@ -23,7 +23,7 @@ router.post(
       country: Joi.string().required(),
       movieId: Joi.number().integer().required(),
       thumbnail: Joi.string().required().regex(/^https?:\/\/(www.){0,1}([0-9a-zA-Z_-]+\.){1,3}[a-zA-Z]+[A-Za-z0-9-._~:/?#[\]@!$&'()*+,;=]+#?$/m),
-      trailerLink: Joi.string().required(),
+      trailerLink: Joi.string().required().regex(/^https?:\/\/(www.){0,1}([0-9a-zA-Z_-]+\.){1,3}[a-zA-Z]+[A-Za-z0-9-._~:/?#[\]@!$&'()*+,;=]+#?$/m),
       image: Joi.string().required().regex(/^https?:\/\/(www.){0,1}([0-9a-zA-Z_-]+\.){1,3}[a-zA-Z]+[A-Za-z0-9-._~:/?#[\]@!$&'()*+,;=]+#?$/m),
     }),
   }),
@@ -34,7 +34,7 @@ router.delete(
   '/movies/:movieId',
   celebrate({
     params: Joi.object().keys({
-      movieId: Joi.string().required().hex(),
+      movieId: Joi.string().hex().required(),
     }),
   }),
   deleteMovie,

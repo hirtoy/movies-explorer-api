@@ -10,43 +10,19 @@ const NotFoundError = require('../errors/not-found-error');
 module.exports.getMovies = (req, res, next) => {
   Movie.find({ owner: req.user._id })
     .then((movies) => res.send(movies))
-    .catch(next);
+    .catch((err) => {
+      next(err);
+    });
 };
 
 // создание фильма
 module.exports.createMovie = (req, res, next) => {
-  const {
-    country,
-    director,
-    duration,
-    year,
-    description,
-    image,
-    trailerLink,
-    trumbnail,
-    movield,
-    nameRU,
-    nameEN,
-  } = req.body;
-
-  Movie.create({
-    country,
-    director,
-    duration,
-    year,
-    description,
-    image,
-    trailerLink,
-    trumbnail,
-    movield,
-    nameRU,
-    nameEN,
-    owner: req.user._id,
-  })
+  const owner = req.user._id;
+  Movie.create({ owner, ...req.body })
     .then((movie) => res.status(STATUS_OK).send(movie))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError());
+        next(new BadRequestError('Переданы некорректные данные'));
         return;
       }
       next(err);
@@ -55,17 +31,26 @@ module.exports.createMovie = (req, res, next) => {
 
 // удаление фильма
 module.exports.deleteMovie = (req, res, next) => {
-  Movie.findById(req.params.movieId)
-    .then(() => {
-      throw new NotFoundError('Фильм с указанным id не найден');
-    })
+  const { movieId } = req.params;
+  const userId = req.user._id;
+  Movie.findById(movieId)
     .then((movie) => {
-      if (movie.owner._id.toString() !== req.user._id.toString()) {
-        throw new ForbiddenError('Можно удалять только свои фильмы');
+      if (!movie) {
+        throw new NotFoundError('Фильм с указанным _id не найден');
       }
-      movie.remove()
-        .then(() => res.status(STATUS_OK).send({ message: 'Фильм успешно удален' }))
-        .catch((err) => next(err));
+      if (movie.owner.toString() !== userId) {
+        throw new ForbiddenError('Можнно удалять только свои фильмы');
+      } else {
+        return Movie.findByIdAndRemove(movieId)
+          .then(() => {
+            res.send({ messege: 'Фильм успешно удален' });
+          });
+      }
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        throw new BadRequestError('Введены некорректные данные');
+      }
+      next(err);
+    });
 };
