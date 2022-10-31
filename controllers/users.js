@@ -30,7 +30,7 @@ module.exports.createUser = (req, res, next) => {
         return;
       }
       if (err.name === 'MongoServerError' && err.code === 11000) {
-        next(new ConflictError('Пользователь с таким email уже существует'));
+        next(new ConflictError('Такой пользователь уже существует'));
         return;
       }
 
