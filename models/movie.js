@@ -46,9 +46,9 @@ const movieSchema = new mongoose.Schema({
     validate: { validator: validUrl },
   },
   owner: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'user',
-    default: [],
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'movie',
+    required: true,
   },
   movieId: {
     type: Number,
