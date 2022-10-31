@@ -1,5 +1,6 @@
 const express = require('express');
 const { celebrate, Joi } = require('celebrate');
+const { validateURL } = require('../utils/validate');
 
 const router = express.Router();
 const {
@@ -22,9 +23,9 @@ router.post(
       director: Joi.string().required(),
       country: Joi.string().required(),
       movieId: Joi.number().integer().required(),
-      thumbnail: Joi.string().required().regex(/^https?:\/\/(www.){0,1}([0-9a-zA-Z_-]+\.){1,3}[a-zA-Z]+[A-Za-z0-9-._~:/?#[\]@!$&'()*+,;=]+#?$/m),
-      trailerLink: Joi.string().required().regex(/^https?:\/\/(www.){0,1}([0-9a-zA-Z_-]+\.){1,3}[a-zA-Z]+[A-Za-z0-9-._~:/?#[\]@!$&'()*+,;=]+#?$/m),
-      image: Joi.string().required().regex(/^https?:\/\/(www.){0,1}([0-9a-zA-Z_-]+\.){1,3}[a-zA-Z]+[A-Za-z0-9-._~:/?#[\]@!$&'()*+,;=]+#?$/m),
+      thumbnail: Joi.string().required().custom(validateURL),
+      trailerLink: Joi.string().required().custom(validateURL),
+      image: Joi.string().required().custom(validateURL),
     }),
   }),
   createMovie,
