@@ -80,7 +80,7 @@ module.exports.login = (req, res, next) => {
       res.send({ token });
     })
     .catch(() => {
-      next(new NotFoundError('Неверный логин или пароль'));
+      next(new UnauthorizedError('Неверный логин или пароль'));
     });
 };
 
