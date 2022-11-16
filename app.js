@@ -5,7 +5,8 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const { errors } = require('celebrate');
-const cors = require('./middlewares/cors');
+// const cors = require('./middlewares/cors');
+const cors = require('cors');
 const { requestLogger, errorLogger } = require('./middlewares/Logger');
 const NotFoundError = require('./errors/not-found-error');
 
@@ -13,7 +14,19 @@ const { PORT = 3000, NODE_ENV, DATABASE_URL } = process.env;
 const app = express();
 app.use(express.json());
 
-app.use(cors);
+const options = {
+  origin: [
+    'http://localhost:3000',
+    'https://hirtoy.nomoredomains.icu',
+    'http://hirtoy.nomoredomains.icu',
+  ],
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+  allowedHeaders: ['Content-Type', 'origin', 'Authorization'],
+  credentials: true,
+};
+app.use('*', cors(options));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
