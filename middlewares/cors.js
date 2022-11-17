@@ -1,6 +1,8 @@
+/* eslint-disable linebreak-style */
+/* eslint-disable consistent-return */
 const allowedCors = [
   'https://hirtoy.nomoredomains.icu',
-   'http://hirtoy.nomoredomains.icu',
+  'http://hirtoy.nomoredomains.icu',
   'localhost:3000',
   'http://localhost:3000',
 ];
