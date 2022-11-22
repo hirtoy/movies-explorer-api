@@ -1,8 +1,4 @@
-<<<<<<< Updated upstream
-// const { STATUS_OK } = require('../utils/constants');
-=======
 const { STATUS_OK } = require('../utils/constants');
->>>>>>> Stashed changes
 
 const Movie = require('../models/movie');
 
@@ -12,11 +8,7 @@ const NotFoundError = require('../errors/not-found-error');
 
 // отображение всех фильмов
 module.exports.getMovies = (req, res, next) => {
-<<<<<<< Updated upstream
-  Movie.find({})
-=======
-  Movie.find({ owner: req.user._id })
->>>>>>> Stashed changes
+  Movie.find({owner: req.user._id})
     .then((movies) => res.send(movies))
     .catch((err) => {
       next(err);
