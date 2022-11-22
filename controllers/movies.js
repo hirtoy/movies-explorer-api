@@ -25,6 +25,7 @@ module.exports.createMovie = (req, res, next) => {
         next(new BadRequestError('Переданы некорректные данные'));
         return;
       }
+      console.log(err);
       next(err);
     });
 };
