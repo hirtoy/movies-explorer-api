@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 // const { STATUS_OK } = require('../utils/constants');
+=======
+const { STATUS_OK } = require('../utils/constants');
+>>>>>>> Stashed changes
 
 const Movie = require('../models/movie');
 
@@ -8,7 +12,11 @@ const NotFoundError = require('../errors/not-found-error');
 
 // отображение всех фильмов
 module.exports.getMovies = (req, res, next) => {
+<<<<<<< Updated upstream
   Movie.find({})
+=======
+  Movie.find({ owner: req.user._id })
+>>>>>>> Stashed changes
     .then((movies) => res.send(movies))
     .catch((err) => {
       next(err);
@@ -17,40 +25,15 @@ module.exports.getMovies = (req, res, next) => {
 
 // создание фильма
 module.exports.createMovie = (req, res, next) => {
-  const {
-    country,
-    director,
-    duration,
-    year,
-    description,
-    image,
-    trailerLink,
-    thumbnail,
-    movieId,
-    nameRU,
-    nameEN,
-  } = req.body;
-  Movie.create({
-    country,
-    director,
-    duration,
-    year,
-    description,
-    image,
-    trailerLink,
-    thumbnail,
-    movieId,
-    owner: req.user._id,
-    nameRU,
-    nameEN,
-  })
-    .then((card) => res.status(201).send(card))
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
-        next(new BadRequestError(`Переданы некорректные данные для создания фильма ${error.message}`));
-      } else {
-        next(error);
+  const owner = req.user._id;
+  Movie.create({ owner, ...req.body })
+    .then((movie) => res.status(STATUS_OK).send(movie))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Переданы некорректные данные'));
+        return;
       }
+      next(err);
     });
 };
 
