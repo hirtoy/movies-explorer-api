@@ -21,10 +21,8 @@ const movieSchema = new mongoose.Schema({
     required: true,
   },
   year: {
-    type: Number,
+    type: String,
     required: true,
-    minlength: 2,
-    maxlength: 4,
   },
   description: {
     type: String,
@@ -33,38 +31,43 @@ const movieSchema = new mongoose.Schema({
   image: {
     type: String,
     required: true,
-    validate: { validator: validUrl },
+    validate: {
+      validator: (image) => validator.isURL(image),
+      message: 'Неправильный формат ссылки с картинкой',
+    },
   },
   trailerLink: {
     type: String,
     required: true,
-    validate: { validator: validUrl },
+    validate: {
+      validator: (trailerLink) => validator.isURL(trailerLink),
+      message: 'Неправильный формат ссылки на трейлер фильма',
+    },
   },
   thumbnail: {
     type: String,
     required: true,
-    validate: { validator: validUrl },
+    validate: {
+      validator: (thumbnail) => validator.isURL(thumbnail),
+      message: 'Неправильный формат ссылки на миниатюрное изображение',
+    },
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'movie',
+    ref: 'user',
     required: true,
   },
   movieId: {
-    type: Number,
+    type: String,
     required: true,
   },
   nameRU: {
     type: String,
     required: true,
-    minlength: 2,
-    maxlength: 30,
   },
   nameEN: {
     type: String,
     required: true,
-    minlength: 2,
-    maxlength: 30,
   },
 });
 
