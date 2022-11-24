@@ -48,22 +48,19 @@ module.exports.updateUserProfile = (req, res, next) => {
     { name, email },
     { new: true, runValidators: true },
   )
-    .then((user) => {
-      if (!user) {
-        throw new NotFoundError('Некорректный id пользователя');
+
+    .orFail(() => new NotFoundError('Пользователь с указанным id не существует'))
+
+    .then((user) => res.send(user))
+
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        next(new BadRequestError(`Переданы некорректные данные для изменения данных пользователя ${error.message}`));
+      } else if (error.name === 'MongoServerError' && error.code === 11000) {
+        next(new ConflictError('Нельзя редактировать данные другого пользователя'));
+      } else {
+        next(error);
       }
-      return res.send({ data: user });
-    })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new BadRequestError('Введены некорректные данные'));
-        return;
-      }
-      if (err.code === 11000) {
-        next(new UnauthorizedError('Пользователь с таким email уже существует'));
-        return;
-      }
-      next(err);
     });
 };
 
