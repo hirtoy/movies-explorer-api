@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const BadRequestError = require('../errors/bad-request-error');
 const NotFoundError = require('../errors/not-found-error');
 const ConflictError = require('../errors/conflict-error');
-const UnauthorizedError = require('../errors/unauthorized-error');
+// const UnauthorizedError = require('../errors/unauthorized-error');
 
 const User = require('../models/user');
 
@@ -15,29 +15,22 @@ module.exports.createUser = (req, res, next) => {
   const { name, email, password } = req.body;
 
   bcrypt.hash(password, 10)
-    .then((hash) => User.create({
-      name, email, password: hash,
-    }))
-    .then((user) => res.status(STATUS_OK).send({
-      user,
-      // user: {
-      //   name: user.name,
-      //   email: user.email,
-      //   id: user._id,
-      // },
-    }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new BadRequestError('При регистрации пользователя произошла ошибка'));
-        return;
-      }
-      if (err.name === 'MongoServerError' && err.code === 11000) {
-        next(new ConflictError('Такой пользователь уже существует'));
-        return;
-      }
-
-      next(err);
-    });
+    .then((hash) => {
+      User.create({
+        name, email, password: hash,
+      })
+        .then((user) => res.status(STATUS_OK).send(user.deletePasswordFromUser()))
+        .catch((error) => {
+          if (error.name === 'ValidationError') {
+            next(new BadRequestError(`Переданы некорректные данные для создания пользователя ${error.message}`));
+          } else if (error.name === 'MongoServerError' && error.code === 11000) {
+            next(new ConflictError('Пользователь с таким email уже существует'));
+          } else {
+            next(error);
+          }
+        });
+    })
+    .catch(next);
 };
 
 module.exports.updateUserProfile = (req, res, next) => {
@@ -66,21 +59,12 @@ module.exports.updateUserProfile = (req, res, next) => {
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
-
-  return User.findUserByCredentials({ email, password })
+  User.findUserByCredentials({ email, password })
     .then((user) => {
-      const token = jwt.sign({ _id: user.id }, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', { expiresIn: '7d' });
-      // const userData = {
-      //   name: user.name,
-      //   email: user.email,
-      //   _id: user._id,
-      //   token,
-      // };
+      const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : devJwtKey, { expiresIn: '7d' });
       res.send({ token });
     })
-    .catch(() => {
-      next(new UnauthorizedError('Неверный логин или пароль'));
-    });
+    .catch(next);
 };
 
 module.exports.signOut = (req, res) => {
